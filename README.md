@@ -1,7 +1,5 @@
 ![Logo-OCS](http://cdn.ocsinventory-ng.org/common/banners/banner300px.png)
 
-# Just for TEST
-
 ## Some Links
   - [ASK question](https://ask.ocsinventory-ng.org)
   - [Website](https://www.ocsinventory-ng.org/?utm_source=github-ocs)
