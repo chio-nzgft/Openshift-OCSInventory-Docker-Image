@@ -43,12 +43,17 @@ RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime
 
 RUN /usr/sbin/a2dissite 000-default ;\
     /usr/sbin/a2enmod rewrite ;
+    /usr/sbin/a2enmod ssl ;\
+    /usr/sbin/a2enmod authz_user
+
+RUN wget https://raw.githubusercontent.com/OCSInventory-NG/OCSInventory-Server/master/binutils/docker-download.sh
+RUN sh docker-download.sh 2.3.1
 
 WORKDIR /tmp/ocs/Apache
 RUN perl Makefile.PL ;\
     make ;\
     make install
-
+    
 RUN cp -R blib/lib/Apache /usr/local/share/perl/5.20.2/ ;\
     cp -R Ocsinventory /usr/local/share/perl/5.20.2/ ;\
     cp /tmp/ocs/etc/logrotate.d/ocsinventory-server /etc/logrotate.d/
