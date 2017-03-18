@@ -1,6 +1,5 @@
 FROM debian:jessie-slim
 
-LABEL maintainer="contact@ocsinventory-ng.org"
 LABEL version="2.3.1"
 LABEL description="OCS (Open Computers and Software Inventory Next Generation)"
 
@@ -98,11 +97,6 @@ RUN chown www-data: /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.p
 COPY /conf/ocsinventory-reports.conf /etc/apache2/conf-available/
 COPY /conf/z-ocsinventory-server.conf /etc/apache2/conf-available/
 
-
-COPY ./scripts/run.sh /root/run.sh
-RUN chmod +x /root/run.sh
-
-
 RUN ln -s /etc/apache2/conf-available/ocsinventory-reports.conf /etc/apache2/conf-enabled/ocsinventory-reports.conf
 RUN ln -s /etc/apache2/conf-available/z-ocsinventory-server.conf /etc/apache2/conf-enabled/z-ocsinventory-server.conf
 
@@ -135,8 +129,32 @@ RUN echo "update mysql.user set authentication_string=password('rootpass') , pas
 RUN echo "update mysql.user set  host='%' where user='root';" >> /tmp/ocs/pass.sql
 RUN echo "flush privileges;" >> /tmp/ocs/pass.sql
 RUN echo '#!/bin/sh' > /tmp/ocs/start.sh
-RUN echo "cd /tmp/ocs/mysql;./bin/mysqld  --defaults-file=/tmp/ocs/my.cnf --initialize-insecure" >> /tmp/ocs/start.sh
 RUN echo "cd /tmp/ocs/mysql;./bin/mysqld_safe --defaults-file=/tmp/ocs/my.cnf  --init-file=/tmp/ocs/pass.sql &" >>/tmp/ocs/start.sh
 RUN chmod +x /tmp/ocs/start.sh
+RUN sed -i 's/mysql:x:'`id -u mysql`'/mysql:x:'`id -u www-data`'/g' /etc/passwd
 RUN chown -R mysql:mysql /tmp/ocs
-CMD ["/bin/bash", "/root/run.sh"]
+
+USER mysql
+RUN cd /tmp/ocs/mysql;./bin/mysqld  --defaults-file=/tmp/ocs/my.cnf --initialize-insecure
+
+USER root
+
+RUN chmod -R 777 /tmp/ocs/mysql/sql_data
+
+RUN mkdir "$APACHE_RUN_DIR" ; \
+    chown -R mysql: /var/log/apache2/ ; \
+    chown -R mysql: /var/run/apache2/ ; \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 
+
+RUN echo '#!/bin/bash' > /tmp/ocs/run.sh ; \
+    echo "/tmp/ocs/start.sh" >> /tmp/ocs/run.sh; \
+    echo "/usr/sbin/apache2ctl start" >> /tmp/ocs/run.sh ; \
+    echo "while true; do" >> /tmp/ocs/run.sh; \
+    echo "sleep 5" >> /tmp/ocs/run.sh; \
+    echo "done" >> /tmp/ocs/run.sh
+
+RUN chmod +x /tmp/ocs/run.sh
+RUN chown mysql:mysql /tmp/ocs/run.sh
+
+USER mysql
+ENTRYPOINT /tmp/ocs/run.sh
