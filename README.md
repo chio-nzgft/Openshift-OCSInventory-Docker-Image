@@ -6,4 +6,4 @@
   - [Github](https://github.com/OCSInventory-NG)
   - [OCS Professional](https://www.ocsinventory-ng.org/en/#ocs-pro-en)
 
-https://github.com/chio-nzgft/Openshift-OCSInventory-Docker-Image/raw/master/pic/show1.png
+![alt tag](https://github.com/chio-nzgft/Openshift-OCSInventory-Docker-Image/raw/master/pic/show1.png)
