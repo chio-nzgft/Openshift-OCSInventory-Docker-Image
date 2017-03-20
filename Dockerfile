@@ -80,18 +80,18 @@ RUN cp -R ocsreports/* /usr/share/ocsinventory-reports/ocsreports
 
 RUN bash -c 'mkdir -p /var/lib/ocsinventory-reports/{download,ipd,logs,scripts,snmp}'
 
-RUN chmod -R +w /var/lib/ocsinventory-reports ;\
+RUN chmod -R +w /var/lib/ocsinventory-reports;\
     chown www-data: -R /var/lib/ocsinventory-reports
 
 COPY dbconfig.inc.php /usr/share/ocsinventory-reports/ocsreports/
 
 RUN cp binutils/ipdiscover-util.pl /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.pl
 
-RUN chown www-data: /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.pl ;\
-    chmod 755 /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.pl ;\
-    chmod +w /usr/share/ocsinventory-reports/ocsreports/dbconfig.inc.php ;\
-    mkdir -p /var/log/ocsinventory-server/ ;\
-    chmod +w /var/log/ocsinventory-server ;\
+RUN chown www-data: /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.pl;\
+    chmod 755 /usr/share/ocsinventory-reports/ocsreports/ipdiscover-util.pl;\
+    chmod +w /usr/share/ocsinventory-reports/ocsreports/dbconfig.inc.php;\
+    mkdir -p /var/log/ocsinventory-server/;\
+    chmod +w /var/log/ocsinventory-server;\
     chown -R www-data:www-data /usr/share/ocsinventory-reports/
 
 COPY /conf/ocsinventory-reports.conf /etc/apache2/conf-available/
@@ -100,11 +100,11 @@ COPY /conf/z-ocsinventory-server.conf /etc/apache2/conf-available/
 RUN ln -s /etc/apache2/conf-available/ocsinventory-reports.conf /etc/apache2/conf-enabled/ocsinventory-reports.conf
 RUN ln -s /etc/apache2/conf-available/z-ocsinventory-server.conf /etc/apache2/conf-enabled/z-ocsinventory-server.conf
 
-RUN rm -rf /tmp/ocs ;\
-    apt-get clean ;\
-    apt-get autoclean ;\
-    apt-get autoremove ;\
-    rm -rf /var/cache/apt/archives/* ;
+RUN rm -rf /tmp/ocs;\
+    apt-get clean;\
+    apt-get autoclean;\
+    apt-get autoremove;\
+    rm -rf /var/cache/apt/archives/*
 
 EXPOSE 80
 RUN useradd mysql
@@ -114,23 +114,23 @@ COPY /lib/libstdc++.so.6 /lib
 COPY /lib/libgcc_s.so.1 /lib
 COPY /lib/libfreebl3.so /lib
 COPY /lib/libncurses.so.5 /lib
-RUN cd /tmp/ocs
-RUN wget http://ftp.ntu.edu.tw/MySQL/Downloads/MySQL-5.7/mysql-5.7.16-linux-glibc2.5-x86_64.tar.gz
-RUN tar zxvf mysql-5.7.16-linux-glibc2.5-x86_64.tar.gz
-RUN mv mysql-5.7.16-linux-glibc2.5-x86_64 mysql
-RUN rm -rf mysql-5.7.16*.*
-RUN mkdir /tmp/ocs/mysql/sql_data
-RUN echo "[server]" > /tmp/ocs/my.cnf
-RUN echo "user=mysql" >> /tmp/ocs/my.cnf
-RUN echo "basedir=/tmp/ocs/mysql" >> /tmp/ocs/my.cnf
-RUN echo "datadir=/tmp/ocs/mysql/sql_data" >> /tmp/ocs/my.cnf
-RUN echo "port=3306" >> /tmp/ocs/my.cnf
-RUN echo "update mysql.user set authentication_string=password('rootpass') , password_expired='N' where user='root';" > /tmp/ocs/pass.sql
-RUN echo "update mysql.user set  host='%' where user='root';" >> /tmp/ocs/pass.sql
-RUN echo "flush privileges;" >> /tmp/ocs/pass.sql
-RUN echo '#!/bin/sh' > /tmp/ocs/start.sh
-RUN echo "cd /tmp/ocs/mysql;./bin/mysqld_safe --defaults-file=/tmp/ocs/my.cnf  --init-file=/tmp/ocs/pass.sql &" >>/tmp/ocs/start.sh
-RUN chmod +x /tmp/ocs/start.sh
+RUN cd /tmp/ocs; \
+    wget http://ftp.ntu.edu.tw/MySQL/Downloads/MySQL-5.7/mysql-5.7.16-linux-glibc2.5-x86_64.tar.gz; \
+    tar zxvf mysql-5.7.16-linux-glibc2.5-x86_64.tar.gz; \
+    mv mysql-5.7.16-linux-glibc2.5-x86_64 mysql; \
+    rm -rf mysql-5.7.16*.*
+
+RUN mkdir /tmp/ocs/mysql/sql_data; \
+    echo "[server]" > /tmp/ocs/my.cnf; \
+    echo "user=mysql" >> /tmp/ocs/my.cnf; \
+    echo "basedir=/tmp/ocs/mysql" >> /tmp/ocs/my.cnf; \
+    echo "datadir=/tmp/ocs/mysql/sql_data" >> /tmp/ocs/my.cnf; \
+    echo "port=3306" >> /tmp/ocs/my.cnf
+
+RUN echo "update mysql.user set authentication_string=password('rootpass') , password_expired='N' where user='root';" > /tmp/ocs/pass.sql; \
+    echo "update mysql.user set  host='%' where user='root';" >> /tmp/ocs/pass.sql; \
+    echo "flush privileges;" >> /tmp/ocs/pass.sql
+
 RUN sed -i 's/mysql:x:'`id -u mysql`'/mysql:x:'`id -u www-data`'/g' /etc/passwd
 RUN chown -R mysql:mysql /tmp/ocs
 
@@ -139,16 +139,19 @@ RUN cd /tmp/ocs/mysql;./bin/mysqld  --defaults-file=/tmp/ocs/my.cnf --initialize
 
 USER root
 
-RUN chmod -R 777 /tmp/ocs/mysql/sql_data
+RUN chmod -R 777 /tmp/ocs/mysql/sql_data;\
+    chmod -R 777 /usr/share/ocsinventory-reports 
 
-RUN mkdir "$APACHE_RUN_DIR" ; \
-    chown -R mysql: /var/log/apache2/ ; \
-    chown -R mysql: /var/run/apache2/ ; \
+RUN mkdir "$APACHE_RUN_DIR";\
+    chown -R mysql: /var/log/apache2/;\
+    chmod -R 777 /var/log/apache2/; \
+    chown -R mysql: /var/run/apache2/; \
+    chmod -R 777 /var/run/apache2/; \ 
     setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 
 
-RUN echo '#!/bin/bash' > /tmp/ocs/run.sh ; \
-    echo "/tmp/ocs/start.sh" >> /tmp/ocs/run.sh; \
-    echo "/usr/sbin/apache2ctl start" >> /tmp/ocs/run.sh ; \
+RUN echo '#!/bin/bash' > /tmp/ocs/run.sh; \
+    echo "cd /tmp/ocs/mysql;./bin/mysqld_safe --defaults-file=/tmp/ocs/my.cnf  --init-file=/tmp/ocs/pass.sql &" >>/tmp/ocs/run.sh; \
+    echo "/usr/sbin/apache2ctl start" >> /tmp/ocs/run.sh; \
     echo "while true; do" >> /tmp/ocs/run.sh; \
     echo "sleep 5" >> /tmp/ocs/run.sh; \
     echo "done" >> /tmp/ocs/run.sh
