@@ -40,7 +40,6 @@ RUN apt-get -y install \
     sudo
 
 RUN cpan -i XML::Entities
-VOLUME /var/lib/mysql
 
 RUN cp /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
@@ -69,10 +68,11 @@ ENV APACHE_RUN_USER     www-data
 ENV APACHE_RUN_GROUP    www-data
 ENV APACHE_LOG_DIR      /var/log/apache2
 ENV APACHE_PID_FILE     /var/run/apache2.pid
-ENV APACHE_RUN_DIR      /var/run/apache2f
+ENV APACHE_RUN_DIR      /var/run/apache2
 ENV APACHE_LOCK_DIR     /var/lock/apache2
 ENV APACHE_LOG_DIR      /var/log/apache2
 
+RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
 
 WORKDIR /tmp/ocs
 
@@ -106,7 +106,6 @@ RUN rm -rf /tmp/ocs;\
     apt-get autoremove;\
     rm -rf /var/cache/apt/archives/*
 
-EXPOSE 80
 RUN useradd mysql
 COPY /lib/libaio.so.1 /lib
 COPY /lib/libcrypt.so.1 /lib
@@ -140,14 +139,15 @@ RUN cd /tmp/ocs/mysql;./bin/mysqld  --defaults-file=/tmp/ocs/my.cnf --initialize
 USER root
 
 RUN chmod -R 777 /tmp/ocs/mysql/sql_data;\
-    chmod -R 777 /usr/share/ocsinventory-reports 
+    chmod -R 777 /usr/share/ocsinventory-reports
 
-RUN mkdir "$APACHE_RUN_DIR";\
-    chown -R mysql: /var/log/apache2/;\
-    chmod -R 777 /var/log/apache2/; \
+RUN chmod -R 777 /var/lock/apache2; \
+    chown -R mysql: /var/log/apache2; \
+    chmod -R 777 /var/log/apache2; \
     chown -R mysql: /var/run/apache2/; \
-    chmod -R 777 /var/run/apache2/; \ 
-    setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 
+    chmod -R 777 /var/run/apache2; \
+    chmod -R 777 /var/log/ocsinventory-server; \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
 
 RUN echo '#!/bin/bash' > /tmp/ocs/run.sh; \
     echo "cd /tmp/ocs/mysql;./bin/mysqld_safe --defaults-file=/tmp/ocs/my.cnf  --init-file=/tmp/ocs/pass.sql &" >>/tmp/ocs/run.sh; \
@@ -158,6 +158,8 @@ RUN echo '#!/bin/bash' > /tmp/ocs/run.sh; \
 
 RUN chmod +x /tmp/ocs/run.sh
 RUN chown mysql:mysql /tmp/ocs/run.sh
+
+EXPOSE 8080
 
 USER mysql
 ENTRYPOINT /tmp/ocs/run.sh
